@@ -1,0 +1,6 @@
+lib/Web/oEmbed/Common.pm
+Makefile.PL
+MANIFEST
+META.yml
+t/00-compile.t
+t/10-youtube.t
