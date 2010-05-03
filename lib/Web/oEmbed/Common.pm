@@ -5,25 +5,48 @@ Web::oEmbed::Common -- Define several well-known oEmbed providers.
 
 =head1 SYNOPSIS
 
-  my $oembedder = Web::oEmbed::Common->new();
+  my $consumer = Web::oEmbed::Common->new();
 
-  my $info = $oembedder->embed( $link_url );
-  if ( $info ) {
-    print $info->render;
+  my $response = $consumer->embed( $link_url );
+  if ( $response ) {
+    print $response->title;
+    print $response->render;
   }
 
 
 =head1 DESCRIPTION
 
-Web::oEmbed::Common defines oEmbed API endpoints for over a dozen popular providers.
+Web::oEmbed::Common provides a subclass of L<Web::oEmbed> that is pre-configured with the oEmbed API endpoints for dozens of popular web sites.
 
-When you create an Web::oEmbed::Common instance, it is initialized with a default set of providers; you can extend it further with your own definitions using the C<register_provider> method.
+The interface mirrors that of L<Web::oEmbed>: create an oEmbed client object and call its C<embed> method for each URL you'd like more information about, then extract the response information using the L<methods defined by Web::oEmbed::Response|Web::oEmbed/METHODS_in_Web::oEmbed::Response>. 
 
-The interface mirrors that of L<Web::oEmbed>: call the C<embed> method with a URL you'd like more information about, then extract the result information using the methods defined by Web::oEmbed::Response. 
 
-Endpoints are currently defined for the following content sites: 5min, Blip.tv, DailyMotion, Flickr, FunnyOrDie.com, Hulu, PhotoBucket, PollDaddy.com, Qik, Revision3, Scribd, SmugMug, Viddler, Vimeo, WordPress.tv, YouTube
+=head2 Defined Providers
+
+When you create a new instance of Web::oEmbed::Common, it is initialized with a default set of well-known providers. 
+
+Endpoints are currently defined for the following content sites: Blip.tv, DailyMotion, 5min, Flickr, FunnyOrDie.com, Hulu, PhotoBucket, PollDaddy.com, Qik, Revision3, Scribd, SmugMug, Viddler, Vimeo, WordPress.tv, YouTube.
 
 An endpoint is also defined for the oEmbed adaptor service from Embed.ly, which itself supports several dozen content sites. As this service is continuing to add new URL patterns, the list of sites it currently supports is fetched on the fly via HTTP when a new Web::oEmbed::Common instance is created.
+
+
+=head2 Registering Additional Providers
+
+You can add your own definitions using the C<register_provider> method. 
+
+As with L<Web::oEmbed>, each provider definition should include a C<api> parameter with the oEmbed endpoint URL, but there are now two different ways to specify the target URLs which that service can handle:
+
+=over 4
+
+=item *
+
+The provider definition's C<url> option can contain a whitespace-separated list of multiple URL patterns to match against. 
+
+=item *
+
+Instead of the C<url> parameter, you may provide a C<url_src> parameter containing a URL for a plain text file containing a list of whitespace separated URLs to match against.
+
+=back
 
 
 =head1 SEE ALSO
@@ -59,7 +82,7 @@ use 5.006;
 use Carp;
 use Any::Moose;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Web::oEmbed;
 extends 'Web::oEmbed';
@@ -87,15 +110,21 @@ sub _compile_url {
 
 ########################################################################
 
-# Extends the default Web::oEmbed behavior to allow loading the URL list 
-# from a remote location, as well as for passing multiple space-separated 
-# URLs in a single call.
+# Don't build regexps until we need them, to defer loading of remote URL lists
 sub register_provider {
+    my($self, $provider) = @_;
+
+    push @{$self->providers}, $provider;
+}
+
+# Two new behaviors: passi multiple space-separated URLs in a single string
+# and/or allow loading the URL list from a remote location.
+sub build_regexep {
     my($self, $provider) = @_;
 
 	if ( ! $provider->{url} and $provider->{url_src} ) {		
 		my $res = $self->agent->get( $provider->{url_src} );
-	
+		
 		unless ( $res->is_success ) {
 			croak( 'Unable to retrive remote URLs for oEmbed: ' . $res->status_line . ' from ' . $provider->{url_src} );
 		}
@@ -108,8 +137,18 @@ sub register_provider {
 	}
 
 	$provider->{regexp} = join '|', map {  $self->_compile_url( $_ ) } grep $_, split ' ', $provider->{url};
-	
-    push @{$self->providers}, $provider;
+}
+
+# Don't build regexps until we need them, and also anchor right end of regexp.
+sub provider_for {
+    my ($self, $uri) = @_;
+    foreach my $provider ( @{$self->providers} ) {
+		my $regexp = $provider->{regexp} || $self->build_regexep( $provider );
+        if ($uri =~ m!^$regexp$!) {
+            return $provider;
+        }
+    }
+    return;
 }
 
 ########################################################################

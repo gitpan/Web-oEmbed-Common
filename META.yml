@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Web-oEmbed-Common
-version:            0.01
+version:            0.02
 abstract:           ~
 author:
     - Matthew Simon Cavalletto <simonm@cavalletto.org>
@@ -10,7 +10,8 @@ configure_requires:
     ExtUtils::MakeMaker:  0
 build_requires:
     ExtUtils::MakeMaker:  0
-requires:  {}
+requires:
+    Web::oEmbed:  0.01
 no_index:
     directory:
         - t

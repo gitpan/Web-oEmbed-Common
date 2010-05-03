@@ -4,3 +4,4 @@ MANIFEST
 META.yml
 t/00-compile.t
 t/10-youtube.t
+t/50-xkcd.t

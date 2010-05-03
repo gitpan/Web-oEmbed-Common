@@ -11,7 +11,9 @@ WriteMakefile(
     	? ('LICENSE'=> 'perl')
     	: ()
 	),
-    'PREREQ_PM'		=> {}, 
+    'PREREQ_PM'		=> {
+		'Web::oEmbed' => 0.01,
+	}, 
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'Web-oEmbed-Common-*' },
 );
