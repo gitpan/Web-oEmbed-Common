@@ -1,0 +1,17 @@
+CHANGES
+
+0.03	November 3, 2010
+
+	Changed definition for Embed.ly to use new services API.
+	Added provider definition for oohembed.com.
+	Copied some additional provider definitions from ruby-oembed.
+
+
+0.02	May 3, 2010
+
+	Improved documentation.
+	
+
+0.01	May 2, 2010
+
+	Initially created.

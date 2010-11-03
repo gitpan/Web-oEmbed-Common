@@ -3,10 +3,10 @@ use ExtUtils::MakeMaker;
 ########################################################################
 
 WriteMakefile(
-    'NAME'		=> 'Web::oEmbed::Common',
-	AUTHOR            => 'Matthew Simon Cavalletto <simonm@cavalletto.org>',
-	# ABSTRACT_FROM     => 'lib/Web/oEmbed/Common.pm', 
-    'VERSION_FROM'	=> 'lib/Web/oEmbed/Common.pm', 
+    'NAME'			=> 'Web::oEmbed::Common',
+	AUTHOR          => 'Matthew Simon Cavalletto <simonm@cavalletto.org>',
+	# ABSTRACT_FROM => 'lib/Web/oEmbed/Common.pm', 
+    'VERSION_FROM' 	=> 'lib/Web/oEmbed/Common.pm', 
     ( $ExtUtils::MakeMaker::VERSION >= 6.3002
     	? ('LICENSE'=> 'perl')
     	: ()
