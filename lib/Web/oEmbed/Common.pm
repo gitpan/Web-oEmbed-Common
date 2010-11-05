@@ -1,6 +1,6 @@
 =head1 PACKAGE
 
-Web::oEmbed::Common -- Define several well-known oEmbed providers.
+Web::oEmbed::Common - Define several well-known oEmbed providers.
 
 
 =head1 SYNOPSIS
@@ -27,20 +27,20 @@ When you create a new instance of Web::oEmbed::Common, it is initialized with a 
 
 Endpoints are currently defined for the following content sites: Blip.tv, DailyMotion, 5min, Flickr, FunnyOrDie.com, Hulu, PhotoBucket, PollDaddy.com, Qik, Revision3, Scribd, SmugMug, Viddler, Vimeo, WordPress.tv, YouTube.
 
-An endpoint is also defined for the oEmbed adaptor service from Embed.ly, which itself supports several dozen content sites. As this service is continuing to add new URL patterns, the list of sites it currently supports is fetched on the fly via HTTP the first time it is used.
+Endpoints are also defined for the oEmbed proxy / adaptor services from Embed.ly and oohEmbed.com, each of which supports over a dozen content sites. As Embed.ly is continuing to add new URL patterns, the list of sites it currently supports is fetched on the fly via HTTP the first time it is used and cached for subsequent lookups.
 
 
 =head2 Registering Additional Providers
 
 You can add your own definitions using the C<register_provider> method. 
 
-As with L<Web::oEmbed>, each provider definition should include a C<api> parameter with the oEmbed endpoint URL, but there are now two different ways to specify the target URLs which that service can handle:
+As with L<Web::oEmbed>, each provider definition should include a C<api> parameter with the oEmbed endpoint URL, but there are now two differences in how you specify the target URLs which that service can handle:
 
 =over 4
 
 =item *
 
-The provider definition's C<url> option can contain a whitespace-separated list of multiple URL patterns to match against. 
+The provider definition's C<url> option can contain a whitespace-separated list of multiple URL patterns to match against. These URLs can contain optional portions or alternatives in parentheses.
 
 =item *
 
@@ -60,7 +60,7 @@ Developed by Matthew Simon Cavalletto.  You may contact the author
 directly at C<evo@cpan.org> or C<simonm@cavalletto.org>.
 
 I found some of these oEmbed endpoint URLs defined in similar libraries 
-in other languages, including wp-includes/class-oembed and django-oembed.
+in other languages, including wp-includes/class-oembed, django-oembed, and ruby-oembed.
 
 
 =head1 LICENSE 
@@ -82,7 +82,7 @@ use 5.006;
 use Carp;
 use Any::Moose;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 ########################################################################
 
@@ -176,8 +176,8 @@ sub _compile_url {
 		} @alts
 	}
 	
-	# Embed.ly's web-accessible URL list includes patterns like *yfrog.com, so
-	# we over-ride the default Web::oEmbed behavior to allow * to match . in
+	# The URL lists from Embed.ly and oohEmbed includes patterns like *yfrog.com
+	# so we over-ride the default Web::oEmbed behavior to allow * to match . in
 	# hostnames, so the above line will match both www.yfrog.com and yfrog.com.
 	join '|', map {
 		# warn "Working on URL: $_\n";

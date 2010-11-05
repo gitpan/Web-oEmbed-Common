@@ -1,7 +1,7 @@
 #!perl 
 
 use strict;
-use Test::More tests => 6;
+use Test::More tests => 10;
 
 BEGIN { use_ok 'Web::oEmbed::Common' || print "Bail out!" }
 
@@ -11,14 +11,33 @@ my $oembedder = Web::oEmbed::Common->new();
 
 isa_ok( $oembedder, 'Web::oEmbed::Common' );
 
-my $result = $oembedder->embed('http://www.youtube.com/watch?v=Lx7khdLV-fU');
+my $target_url = 'http://www.youtube.com/watch?v=Lx7khdLV-fU';
 
-isa_ok( $result, 'Web::oEmbed::Response' );
+my $request_url = $oembedder->request_url( $target_url );
 
-is( $result->type, "video", "Got a video from YouTube" );
+ok( defined $request_url, "Generated request URL" );
 
-like( $result->thumbnail_url, qr/^http(.*)jpg/sx, "Got a YouTube thumbnail" );
+like( $request_url, qr/\Qwww.youtube.com%2Fwatch%3Fv%3DLx7khdLV-fU\E/, "URL contains target" );
 
-like( $result->html, qr/<object .*? movie /sx, "Got a YouTube embed code" );
+like( $request_url, qr/\Qhttp:\/\/www.youtube.com\/oembed\E/, "URL contains endpoint" );
+
+my $result = $oembedder->embed( $target_url );
+
+ok( defined $result, "Received oEmbed response" );
+isa_ok( $result, 'Web::oEmbed::Response', "Received expected response type" );
+
+if ( ! $result ) {
+	
+	# Unable to retrieve oEmbed result; is the 'Net connection active?
+	
+	fail( "No response to check" );
+	fail( "No response to check" );
+	fail( "No response to check" );
+	
+} else {
+	is( $result->type, "video", "Response is a video" );
+	like( $result->thumbnail_url, qr/^http(.*)jpg/sx, "Response has thumbnail" );
+	like( $result->html, qr/<object .*? movie /sx, "Response has embed code" );	
+}
 
 1;
