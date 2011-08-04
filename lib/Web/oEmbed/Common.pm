@@ -6,6 +6,7 @@ Web::oEmbed::Common - Define several well-known oEmbed providers.
 =head1 SYNOPSIS
 
   my $consumer = Web::oEmbed::Common->new();
+  $consumer->set_embedly_api_key( '0123ABCD0123ABCD0123ABCD' );
 
   my $response = $consumer->embed( $link_url );
   if ( $response ) {
@@ -27,26 +28,16 @@ When you create a new instance of Web::oEmbed::Common, it is initialized with a 
 
 Endpoints are currently defined for the following content sites: Blip.tv, DailyMotion, 5min, Flickr, FunnyOrDie.com, Hulu, PhotoBucket, PollDaddy.com, Qik, Revision3, Scribd, SmugMug, Viddler, Vimeo, WordPress.tv, YouTube.
 
-Endpoints are also defined for the oEmbed proxy / adaptor services from Embed.ly and oohEmbed.com, each of which supports over a dozen content sites. As Embed.ly is continuing to add new URL patterns, the list of sites it currently supports is fetched on the fly via HTTP the first time it is used and cached for subsequent lookups.
+Endpoints are also defined for the oEmbed proxy / adaptor services from Embed.ly and oohEmbed.com, each of which supports over a dozen content sites. Use of the Embed.ly service is subject to a daily rate limit, so you should consider obtaining your own API key by registering on their site.
 
 
 =head2 Registering Additional Providers
 
 You can add your own definitions using the C<register_provider> method. 
 
-As with L<Web::oEmbed>, each provider definition should include a C<api> parameter with the oEmbed endpoint URL, but there are now two differences in how you specify the target URLs which that service can handle:
-
-=over 4
-
-=item *
+As with L<Web::oEmbed>, each provider definition should include a C<api> parameter with the oEmbed endpoint URL, but there are minor differences in how you specify the target URLs which that service can handle.
 
 The provider definition's C<url> option can contain a whitespace-separated list of multiple URL patterns to match against. These URLs can contain optional portions or alternatives in parentheses.
-
-=item *
-
-Instead of the C<url> parameter, you may provide a C<url_src> parameter containing a URL for a plain text file containing a list of whitespace separated URLs to match against, or a subroutine reference that will return such a list.
-
-=back
 
 
 =head1 SEE ALSO
@@ -65,7 +56,7 @@ in other languages, including wp-includes/class-oembed, django-oembed, and ruby-
 
 =head1 LICENSE 
 
-Copyright 2010 Matthew Simon Cavalletto. 
+Copyright 2010, 2011 Matthew Simon Cavalletto. 
 
 You may use, modify, and distribute this software under the same terms as Perl.
 
@@ -82,7 +73,7 @@ use 5.006;
 use Carp;
 use Any::Moose;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 ########################################################################
 
@@ -104,49 +95,6 @@ sub register_providers {
 	foreach my $provider ( @providers ) {
 		$self->register_provider( $provider ) 
 	}
-}
-
-# Don't build regexps until we need them, to defer loading of remote URL lists
-sub register_provider {
-    my($self, $provider) = @_;
-
-    push @{$self->providers}, $provider;
-}
-
-# Allow loading the URL list from a remote location.
-sub build_regexep {
-    my($self, $provider) = @_;
-
-	if ( ! $provider->{url} ) {
-		
-		my $url_src = $provider->{url_src}
-			or croak( 'Missing url for oEmbed: ' . $provider->{api} );
-		
-		$provider->{url} = eval {
-			if ( ref $url_src ) {
-				$url_src->( $self, $provider );
-			} else {
-				my $res = $self->agent->get( $provider->{url_src} );
-				
-				unless ( $res->is_success ) {
-					croak( 'Unable to retrive remote URLs for oEmbed: ' . $res->status_line . ' from ' . $provider->{url_src} );
-				}
-
-				$res->content;
-			}
-
-		} || '';
-	}
-	
-	$provider->{regexp} = eval {
-		$self->_compile_url( $provider->{url} )
-	};
-	
-	if ( $@ and ! $provider->{url_src} ) {
-		die $@;
-	}
-	
-	$provider->{regexp}
 }
 
 sub _compile_url {
@@ -176,7 +124,7 @@ sub _compile_url {
 		} @alts
 	}
 	
-	# The URL lists from Embed.ly and oohEmbed includes patterns like *yfrog.com
+	# The URL lists from oohEmbed includes patterns like *yfrog.com
 	# so we over-ride the default Web::oEmbed behavior to allow * to match . in
 	# hostnames, so the above line will match both www.yfrog.com and yfrog.com.
 	join '|', map {
@@ -189,12 +137,11 @@ sub _compile_url {
 	} @urls
 }
 
-# Don't build regexps until we need them, and also anchor right end of regexp.
+# Anchor right end of regexp.
 sub provider_for {
     my ($self, $uri) = @_;
     foreach my $provider ( @{$self->providers} ) {
-		my $regexp = $provider->{regexp} || $self->build_regexep( $provider );
-        if ($uri =~ m!^$regexp(\#|$)!) {
+        if ($uri =~ m!^$provider->{regexp}(\#|$)!) {
             return $provider;
         }
     }
@@ -236,7 +183,7 @@ sub register_common {
 			url  => 'http://(www.)vimeo.com/*', 
 		},
 		{
-			name => 'Revision3', 
+			name => 'Revision3',
 			api  => 'http://revision3.com/api/oembed/', 
 			url  => 'http://*revision3.com/*', 
 		},
@@ -312,25 +259,26 @@ sub register_common {
 		},
 		{
 			name => 'Embed.ly',
-			api  => 'http://api.embed.ly/1/oembed',
-			url_src => sub {
-				my ( $self ) = shift;
-				my $service_url = 'http://api.embed.ly/1/services';
-				my $http_resp = $self->agent->get($service_url);
-				
-			    return if $http_resp->is_error;
-			    
-				my $data = Web::oEmbed::Response->parse_json( $http_resp->content );
-				
-				join ' ', map { @{ $_->{regex} } } @$data
-			}
+			api  =>
+ 'http://api.embed.ly/1/oembed?key=6f4159f0be0011e0aa814040d3dc5c07',
+			url =>  'http://*/*',
 		},
 		{ 
 			name => 'oohEmbed',                                                                                                              
 			api  => 'http://oohembed.com/oohembed/', 
-			url  => 'http://*.5min.com/Video/* http://*.amazon.(com|co.uk|de|ca|jp)/*/(gp/product|o/ASIN|obidos/ASIN|dp)/* http://*.blip.tv/* http://*.collegehumor.com/video:* http://*.thedailyshow.com/video/* http://*.dailymotion.com/* http://dotsub.com/view/* http://*.flickr.com/photos/* http://*.funnyordie.com/videos/* http://video.google.com/videoplay?* http://www.hulu.com/watch/* http://*.livejournal.com/ http://*.metacafe.com/watch/* http://*.nfb.ca/film/* http://*.phodroid.com/*/*/* http://qik.com/* http://*.revision3.com/* http://*.scribd.com/* http://*.slideshare.net/* http://*.twitpic.com/* http://(www.)twitter.com/*/statuses/* http://*.viddler.com/explore/* http://(www.)vimeo.com/* http://(www.)vimeo.com/groups/*/videos/* http://*.wikipedia.org/wiki/* http://*.wordpress.com/yyyy/mm/dd/* http://*.xkcd.com/*/ http://(www.)yfrog.(com|ru|com.tr|it|fr|co.il|co.uk|com.pl|pl|eu|us)/* http://*.youtube.com/watch*',
+			url  => 'http://*.5min.com/Video/* http://*.amazon.(com|co.uk|de|ca|jp)/*/(gp/product|o/ASIN|obidos/ASIN|dp)/* http://*.blip.tv/* http://*.collegehumor.com/video:* http://*.thedailyshow.com/video/* http://*.dailymotion.com/* http://dotsub.com/view/* http://*.flickr.com/photos/* http://*.funnyordie.com/videos/* http://video.google.com/videoplay?* http://www.hulu.com/watch/* http://*.livejournal.com/ http://*.metacafe.com/watch/* http://*.nfb.ca/film/* http://*.phodroid.com/*/*/* http://qik.com/* http://*.revision3.com/* http://*.scribd.com/* http://*.slideshare.net/* http://*.twitpic.com/* http://(www.)twitter.com/*/statuses/* http://*.viddler.com/explore/* http://(www.)vimeo.com/* http://(www.)vimeo.com/groups/*/videos/* http://*.wikipedia.org/wiki/* http://*.wordpress.com/yyyy/mm/dd/* http://(*.)xkcd.com/*/ http://(www.)yfrog.(com|ru|com.tr|it|fr|co.il|co.uk|com.pl|pl|eu|us)/* http://*.youtube.com/watch*',
 		},
 	);
+}
+
+sub set_embedly_api_key {
+	my ( $class, $api_key ) = @_;
+
+	for ( @{ $class->providers } ) {
+		if ( $_->{name} eq 'Embed.ly' ) {
+			$_->{api} = 'http://api.embed.ly/1/oembed?key=' . $api_key
+		}
+	}
 }
 
 ########################################################################

@@ -1,22 +1,22 @@
---- #YAML:1.0
-name:               Web-oEmbed-Common
-version:            0.04
-abstract:           ~
+---
+abstract: unknown
 author:
-    - Matthew Simon Cavalletto <simonm@cavalletto.org>
-license:            perl
-distribution_type:  module
-configure_requires:
-    ExtUtils::MakeMaker:  0
+  - 'Matthew Simon Cavalletto <simonm@cavalletto.org>'
 build_requires:
-    ExtUtils::MakeMaker:  0
-requires:
-    Web::oEmbed:  0.01
-no_index:
-    directory:
-        - t
-        - inc
-generated_by:       ExtUtils::MakeMaker version 6.56
+  ExtUtils::MakeMaker: 0
+configure_requires:
+  ExtUtils::MakeMaker: 0
+dynamic_config: 1
+generated_by: 'ExtUtils::MakeMaker version 6.58, CPAN::Meta::Converter version 2.110930001'
+license: perl
 meta-spec:
-    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
-    version:  1.4
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Web-oEmbed-Common
+no_index:
+  directory:
+    - t
+    - inc
+requires:
+  Web::oEmbed: 0.01
+version: 0.05

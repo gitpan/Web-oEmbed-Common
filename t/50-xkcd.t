@@ -1,7 +1,7 @@
 #!perl 
 
 use strict;
-use Test::More tests => 9;
+use Test::More tests => 10;
 
 BEGIN { use_ok 'Web::oEmbed::Common' || print "Bail out!" }
 
@@ -36,7 +36,8 @@ if ( ! $result ) {
 	is( $result->type, "photo", "Response is a photo" );
 	like( $result->url, qr/circuit_diagram/, "Found expected filename" );
 
-	like( $result->thumbnail_url, qr/^http(.*)[.](jpg|gif|png)/sx, "Response has thumbnail" );
+	ok( $result->thumbnail_url, "Response has thumbnail" );
+	like( $result->thumbnail_url, qr/^http(.*)[.](jpg|gif|png)/sx, "Response thumbnail looks normal" );
 }
 
 1;

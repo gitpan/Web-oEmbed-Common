@@ -1,5 +1,11 @@
 CHANGES
 
+0.05	August 3, 2011
+
+	Internal revisions to compensate for disappearance of Embedly's patterns
+	endpoint; added default API key for Embedly and method to change it. 
+
+
 0.04	November 5, 2010
 
 	Fixed package POD name line to improve CPAN indexing.

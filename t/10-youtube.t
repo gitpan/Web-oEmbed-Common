@@ -11,13 +11,14 @@ my $oembedder = Web::oEmbed::Common->new();
 
 isa_ok( $oembedder, 'Web::oEmbed::Common' );
 
-my $target_url = 'http://www.youtube.com/watch?v=Lx7khdLV-fU';
+my $youtube_id = '5iAIM02kv0g';
+my $target_url = "http://www.youtube.com/watch?v=$youtube_id";
 
 my $request_url = $oembedder->request_url( $target_url );
 
 ok( defined $request_url, "Generated request URL" );
 
-like( $request_url, qr/\Qwww.youtube.com%2Fwatch%3Fv%3DLx7khdLV-fU\E/, "URL contains target" );
+like( $request_url, qr/\Qwww.youtube.com%2Fwatch%3Fv%3D$youtube_id\E/, "URL contains target" );
 
 like( $request_url, qr/\Qhttp:\/\/www.youtube.com\/oembed\E/, "URL contains endpoint" );
 
